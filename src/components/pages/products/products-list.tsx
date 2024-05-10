@@ -1,27 +1,43 @@
 'use client'
-import {Fragment} from "react";
+import {Fragment, useEffect, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import isValidArray from "@/utils/isValidArray";
 import {getProductPrice} from "@/utils/product_utils";
+import base from "@/utils/airtable";
 
 export default function ProductsList(props:{
-	data: any
 }){
-	const data = JSON.parse(props.data)
+	const [data, setData] = useState<any []>([])
+	const [loading, setLoading] = useState(false)
 
+	useEffect(() => {
+		setLoading(true)
+		base('products').select({
+		}).all().then(r => {
+			setData([...r])
+		}).finally(() => setLoading(false))
+	}, []);
 
 	return (
 		<div className={'grid grid-cols-4 gap-5'}>
-			{data.map((product: any, index: number) => (
-				<Fragment key={index}>
-					<Link href={`/products/${product.id}`}>
-						<ProductImage product={product}/>
-						<p className={'line-clamp-2'}>{product.fields.name}</p>
-						<p className={'font-bold'}>{getProductPrice(product.fields).toLocaleString('vi-VN')}đ</p>
-					</Link>
-				</Fragment>
-			))}
+			{loading ? (
+				<>
+					<p>Đang load dữ liệu, bạn chờ chút nhé </p>
+				</>
+			) : (
+				<>
+					{data.map((product: any, index: number) => (
+						<Fragment key={index}>
+							<Link href={`/products/${product.id}`}>
+								<ProductImage product={product}/>
+								<p className={'line-clamp-2'}>{product.fields.name}</p>
+								<p className={'font-bold'}>{getProductPrice(product.fields).toLocaleString('vi-VN')}đ</p>
+							</Link>
+						</Fragment>
+					))}
+				</>
+			)}
 		</div>
 	)
 }
